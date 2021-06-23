@@ -1,4 +1,4 @@
- /* This code works with MAX30102 + 128x32 OLED i2c + Buzzer and Arduino UNO
+  /* This code works with MAX30102 + 128x32 OLED i2c + Buzzer and Arduino UNO
  * It's displays the Average BPM on the screen, with an animation and a buzzer sound
  * everytime a heart pulse is detected
  * It's a modified version of the HeartRate library example
@@ -10,6 +10,7 @@
 #include <Wire.h>
 #include "MAX30105.h"           //MAX3010x library
 #include "heartRate.h"          //Heart rate calculating algorithm
+#include <SoftwareSerial.h>
 
 MAX30105 particleSensor;
 
@@ -20,6 +21,8 @@ long lastBeat = 0; //Time at which the last beat occurred
 const int buzzer = 9;
 float beatsPerMinute;
 int beatAvg;
+
+SoftwareSerial sw(5, 6);
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -43,11 +46,15 @@ static const unsigned char PROGMEM logo3_bmp[] =
 0x01, 0x80, 0x01, 0x80, 0x00, 0xC0, 0x03, 0x00, 0x00, 0x60, 0x06, 0x00, 0x00, 0x30, 0x0C, 0x00,
 0x00, 0x08, 0x10, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x03, 0xC0, 0x00, 0x00, 0x01, 0x80, 0x00  };
 
-
+String str;
 void setup() {  
+  Serial.begin(9600);
+
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); //Start the OLED display
-  display.display();
+  Serial.println("Trying to connect to the nodmcu");
+  sw.begin(115200);
   delay(3000);
+  Serial.println();
   // Initialize sensor
   particleSensor.begin(Wire, I2C_SPEED_FAST); //Use default I2C port, 400kHz speed
   particleSensor.setup(); //Configure sensor with default settings
@@ -83,7 +90,8 @@ if(irValue > 7000){                                           //If a finger is d
     display.display();
     tone(buzzer,1000);                                        //And tone the buzzer for a 100ms you can reduce it it will be better
     delay(1000);
-    noTone(buzzer);  
+    noTone(buzzer);
+    sw.println(beatAvg);
     delay(1000);
     //Deactivate the buzzer to have the effect of a "bip"
     //We sensed a beat!
@@ -118,6 +126,6 @@ if(irValue > 7000){                                           //If a finger is d
      display.println("your finger ");  
      display.display();
      noTone(buzzer);
-     }
+     }     
 
 }
